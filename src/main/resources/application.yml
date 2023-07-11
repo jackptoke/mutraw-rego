@@ -1,0 +1,5 @@
+spring:
+  application:
+    name:citizen-catalog-service`q
+message: You are using the default profile
+

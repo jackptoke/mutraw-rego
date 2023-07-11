@@ -1,0 +1,5 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+message: You are using the production profile
