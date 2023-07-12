@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpStatusCode
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 import util.citizenEntityList
 
 @SpringBootTest(classes = [KpopApiApplication::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -99,6 +101,24 @@ class CitizenControllerIntegrationTest {
             .responseBody
 
         Assertions.assertEquals(updatedCitizen.firstName, result?.firstName)
+    }
+
+    @Test
+    fun deleteCitizen() {
+        val citizens = webTestClient.get().uri("/api/v1/citizens")
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(CitizenDTO::class.java)
+            .returnResult().responseBody
+
+        val citizenToDelete = citizens?.get(0)
+
+         webTestClient
+            .delete()
+            .uri("/api/v1/citizens/${citizenToDelete?.id}")
+            .exchange()
+            .expectStatus()
+            .is2xxSuccessful
     }
 
 }

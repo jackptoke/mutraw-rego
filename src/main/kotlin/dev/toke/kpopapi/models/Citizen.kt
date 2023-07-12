@@ -9,7 +9,7 @@ data class Citizen(
     @Id // @GeneratedValue(strategy = GenerationType.AUTO)  if Int is used as an ID
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID?,
-    val firstName: String,
-    val lastName: String,
-    val dob: String
+    var firstName: String,
+    var lastName: String,
+    var dob: String
 )
