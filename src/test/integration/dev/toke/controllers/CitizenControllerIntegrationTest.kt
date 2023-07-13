@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
+import org.springframework.web.util.UriComponentsBuilder
 import util.citizenEntityList
 
 @SpringBootTest(classes = [KpopApiApplication::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -107,7 +108,7 @@ class CitizenControllerIntegrationTest {
     fun deleteCitizen() {
         val citizens = webTestClient.get().uri("/api/v1/citizens")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isNoContent
             .expectBodyList(CitizenDTO::class.java)
             .returnResult().responseBody
 
@@ -119,6 +120,22 @@ class CitizenControllerIntegrationTest {
             .exchange()
             .expectStatus()
             .is2xxSuccessful
+    }
+
+    @Test
+    fun findCitizenByYearOfBirth() {
+        val uri = UriComponentsBuilder.fromUriString("/api/v1/citizens")
+            .queryParam("yearOfBirth", "1982")
+            .toUriString()
+
+        val citizens = webTestClient.get().uri(uri)
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(CitizenDTO::class.java)
+            .returnResult().responseBody
+
+        Assertions.assertEquals(1, citizens?.size)
+        Assertions.assertEquals("Jack", citizens!![0].firstName)
     }
 
 }

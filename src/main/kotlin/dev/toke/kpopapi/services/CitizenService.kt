@@ -71,21 +71,9 @@ class CitizenService(val citizenRepository: CitizenRepository) {
         }
     }
 
-    fun mapToDTO(citizen: Citizen): CitizenDTO {
-        return CitizenDTO(
-                id = citizen.id,
-                firstName = citizen.firstName,
-                lastName = citizen.lastName,
-                dob = citizen.dob
-            )
+    fun findCitizensByYearOfBirth(year: String): List<CitizenDTO> {
+        return citizenRepository.findCitizensByYearOfBirth(year).map { c -> CitizenDTO(c.id, c.firstName, c.lastName, c.dob) }
+
     }
 
-    fun mapToCitizen(citizen: CitizenDTO): Citizen {
-        return Citizen(
-            id = citizen.id,
-            firstName = citizen.firstName,
-            lastName = citizen.lastName,
-            dob = citizen.dob
-        )
-    }
 }

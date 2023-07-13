@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.util.*
@@ -25,9 +26,11 @@ class CitizenController(val citizenService: CitizenService) {
     companion object: KLogging()
 
     @GetMapping
-    fun getAllCitizens():List<CitizenDTO> {
+    fun getAllCitizens(@RequestParam("yearOfBirth", required = false) yearOfBirth: String?):List<CitizenDTO> {
         logger.info("Get all citizens")
-        return citizenService.getAllCitizens()
+        return yearOfBirth?.let {
+            citizenService.findCitizensByYearOfBirth(yearOfBirth)
+        } ?: citizenService.getAllCitizens()
     }
 
     @GetMapping("/{id}")
@@ -45,7 +48,7 @@ class CitizenController(val citizenService: CitizenService) {
             citizenService.addCitizen(newCitizen)
         }catch (ex: Exception) {
             logger.error("Failed to create a new citizen.")
-            null
+            throw ex
         }
     }
 

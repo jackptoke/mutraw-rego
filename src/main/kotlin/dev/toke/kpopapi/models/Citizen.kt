@@ -4,12 +4,18 @@ import jakarta.persistence.*
 import java.util.UUID
 
 @Entity
-@Table(name = "Citizen")
+@Table(name = "CITIZEN")
 data class Citizen(
     @Id // @GeneratedValue(strategy = GenerationType.AUTO)  if Int is used as an ID
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID?,
+    @Column(name = "firstName")
     var firstName: String,
+    @Column(name = "lastName")
     var lastName: String,
-    var dob: String
+    @Column(name = "dob")
+    var dob: String,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="ADDRESS_ID", nullable = true)
+    var address: Address? = null
 )

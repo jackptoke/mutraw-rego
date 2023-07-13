@@ -1,5 +1,5 @@
 spring:
   application:
-    name:citizen-catalog-service`q
+    name:citizen-catalog-service
 message: You are using the default profile
 

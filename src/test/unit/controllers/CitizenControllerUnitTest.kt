@@ -15,8 +15,10 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 import util.citizenDTO
 import util.citizenEntityList
+import java.lang.RuntimeException
 import java.util.UUID
 
 @ContextConfiguration(classes = [KpopApiApplication::class])
@@ -77,7 +79,7 @@ class CitizenControllerUnitTest {
     }
 
     @Test
-    fun testAddCitizenWithBadData() {
+    fun addCitizen_validationException() {
         val newCitizen = citizenDTO(id = UUID.randomUUID(), firstName = "", lastName = "", dob = "")
 
         every { citizenServiceMock.addCitizen(any())} returns citizenDTO(id = UUID.randomUUID())
@@ -93,6 +95,26 @@ class CitizenControllerUnitTest {
 
         // Utilising error message from GlobalErrorHandler
         Assertions.assertEquals("citizenDTO.dob must not be blank;citizenDTO.firstName must not be blank;citizenDTO.lastName must not be blank", result)
+    }
+
+    @Test
+    fun addCitizen_runtimeException() {
+        val citizenDTO = citizenDTO(null, "Josiah", "Toke")
+
+        val errorMessage = "Unexpected error occurred."
+        every { citizenServiceMock.addCitizen(any()) } throws Exception(errorMessage)
+
+        val response = webTestClient
+            .post()
+            .uri("/api/v1/citizens")
+            .bodyValue(citizenDTO)
+            .exchange()
+            .expectStatus().is5xxServerError
+            .expectBody(String::class.java)
+            .returnResult()
+            .responseBody
+
+        Assertions.assertEquals(errorMessage, response)
     }
 
     @Test
