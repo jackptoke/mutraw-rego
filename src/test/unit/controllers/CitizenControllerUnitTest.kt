@@ -4,6 +4,7 @@ import com.ninjasquad.springmockk.MockkBean
 import dev.toke.kpopapi.KpopApiApplication
 import dev.toke.kpopapi.controllers.CitizenController
 import dev.toke.kpopapi.dtos.CitizenDTO
+import dev.toke.kpopapi.models.Address
 import dev.toke.kpopapi.services.CitizenService
 import io.mockk.every
 import io.mockk.just
@@ -34,7 +35,8 @@ class CitizenControllerUnitTest {
     @Test
     fun getAllCitizens() {
 
-        every { citizenServiceMock.getAllCitizens() } returns citizenEntityList().map { c -> CitizenDTO(c.id, c.firstName, c.lastName, c.dob) }
+        val address = Address(UUID.randomUUID(), "63 Tobin Street", "Ararat", "3377")
+        every { citizenServiceMock.getAllCitizens() } returns citizenEntityList(address).map { c -> CitizenDTO(c.id, c.firstName, c.lastName, c.dob) }
 
         val result = webTestClient.get()
             .uri("/api/v1/citizens")
@@ -49,8 +51,8 @@ class CitizenControllerUnitTest {
     @Test
     fun getCitizenById() {
         val id = UUID.fromString("bd04e311-46dd-46b3-899e-05d8e8e17805")
-
-        every { citizenServiceMock.getCitizenById(any()) } returns citizenEntityList().map { c -> CitizenDTO(c.id, c.firstName, c.lastName, c.dob) }[0]
+        val address = Address(UUID.randomUUID(), "63 Tobin Street", "Ararat", "3377")
+        every { citizenServiceMock.getCitizenById(any()) } returns citizenEntityList(address).map { c -> CitizenDTO(c.id, c.firstName, c.lastName, c.dob) }[0]
 
         val result = webTestClient.get()
             .uri("/api/v1/citizens/{id}", id)
@@ -64,13 +66,13 @@ class CitizenControllerUnitTest {
 
     @Test
     fun addCitizen() {
-        val newCitizen = citizenDTO(id = UUID.randomUUID())
+        val newCitizen = citizenDTO(id = UUID.randomUUID(), addressId = UUID.randomUUID())
 
         every { citizenServiceMock.addCitizen(any())} returns newCitizen
 
         val result = webTestClient.post()
             .uri("/api/v1/citizens")
-            .bodyValue(citizenDTO())
+            .bodyValue(newCitizen)
             .exchange()
             .expectStatus().isCreated
             .expectBody(CitizenDTO::class.java).returnResult().responseBody
@@ -80,9 +82,9 @@ class CitizenControllerUnitTest {
 
     @Test
     fun addCitizen_validationException() {
-        val newCitizen = citizenDTO(id = UUID.randomUUID(), firstName = "", lastName = "", dob = "")
+        val newCitizen = citizenDTO(id = UUID.randomUUID(), firstName = "", lastName = "", dob = "", addressId = UUID.randomUUID())
 
-        every { citizenServiceMock.addCitizen(any())} returns citizenDTO(id = UUID.randomUUID())
+        every { citizenServiceMock.addCitizen(any())} returns citizenDTO(id = UUID.randomUUID(), addressId = UUID.randomUUID())
 
         val result = webTestClient.post()
             .uri("/api/v1/citizens")
@@ -99,7 +101,7 @@ class CitizenControllerUnitTest {
 
     @Test
     fun addCitizen_runtimeException() {
-        val citizenDTO = citizenDTO(null, "Josiah", "Toke")
+        val citizenDTO = citizenDTO(null, "Josiah", "Toke", addressId = UUID.randomUUID())
 
         val errorMessage = "Unexpected error occurred."
         every { citizenServiceMock.addCitizen(any()) } throws Exception(errorMessage)
@@ -119,9 +121,9 @@ class CitizenControllerUnitTest {
 
     @Test
     fun updateCitizen() {
-        val newCitizen = citizenDTO(id = UUID.randomUUID())
+        val newCitizen = citizenDTO(id = UUID.randomUUID(), addressId = UUID.randomUUID())
 
-        every { citizenServiceMock.updateCitizen(any(), any())} returns citizenDTO(id = newCitizen.id, "Jack", "Toke", "02/12/1982")
+        every { citizenServiceMock.updateCitizen(any(), any())} returns citizenDTO(id = newCitizen.id, "Jack", "Toke", "02/12/1982", newCitizen.addressId!!)
 
         val result = webTestClient.patch()
             .uri("/api/v1/citizens/{id}", newCitizen.id)
@@ -136,9 +138,9 @@ class CitizenControllerUnitTest {
 
     @Test
     fun updateCitizenWithBadData() {
-        val newCitizen = citizenDTO(id = UUID.randomUUID())
+        val newCitizen = citizenDTO(id = UUID.randomUUID(), addressId = UUID.randomUUID())
 
-        every { citizenServiceMock.updateCitizen(any(), any())} returns citizenDTO(id = newCitizen.id, "Jack", "Toke", "02/12/1982")
+        every { citizenServiceMock.updateCitizen(any(), any())} returns citizenDTO(id = newCitizen.id, "Jack", "Toke", "02/12/1982", newCitizen.addressId!!)
 
         webTestClient.patch()
             .uri("/api/v1/citizens/{id}", newCitizen.id)
@@ -149,7 +151,7 @@ class CitizenControllerUnitTest {
 
     @Test
     fun deleteCitizen() {
-        val citizen = citizenDTO(id = UUID.randomUUID())
+        val citizen = citizenDTO(id = UUID.randomUUID(), addressId = UUID.randomUUID())
         every { citizenServiceMock.deleteCitizen(any())} just runs //returns Unit
 
         webTestClient.delete()

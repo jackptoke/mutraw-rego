@@ -22,8 +22,8 @@ repositories {
 dependencies {
 	//Database
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	runtimeOnly("com.h2database:h2")
-//	runtimeOnly("org.postgresql:postgresql")
+//	runtimeOnly("com.h2database:h2")
+	runtimeOnly("org.postgresql:postgresql")
 
 	//Validator
 	implementation("org.springframework.boot:spring-boot-starter-validation")

@@ -18,4 +18,8 @@ data class Citizen(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="ADDRESS_ID", nullable = true)
     var address: Address? = null
-)
+) {
+    override fun toString(): String {
+        return "Citizen(id=$id, firstName=$firstName, lastName=$lastName, dob=$dob, addressId=${address?.id})"
+    }
+}

@@ -1,6 +1,8 @@
 package repositories
 
 import dev.toke.kpopapi.KpopApiApplication
+import dev.toke.kpopapi.models.Address
+import dev.toke.kpopapi.repositories.AddressRepository
 import dev.toke.kpopapi.repositories.CitizenRepository
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -23,10 +25,16 @@ class CitizenRepositoryIntegrationTest {
     @Autowired
     lateinit var citizenRepository: CitizenRepository
 
+    @Autowired
+    lateinit var addressRepository: AddressRepository
+
     @BeforeEach
     fun setUp() {
         citizenRepository.deleteAll()
-        val citizens = citizenEntityList()
+        addressRepository.deleteAll()
+        val address = Address(id = null, "63 Tobin Street", "Ararat", "3377")
+        addressRepository.save(address)
+        val citizens = citizenEntityList(address)
         citizenRepository.saveAll(citizens)
     }
 

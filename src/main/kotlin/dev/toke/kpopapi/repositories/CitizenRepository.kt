@@ -1,6 +1,5 @@
 package dev.toke.kpopapi.repositories
 
-import dev.toke.kpopapi.dtos.CitizenDTO
 import dev.toke.kpopapi.models.Citizen
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository

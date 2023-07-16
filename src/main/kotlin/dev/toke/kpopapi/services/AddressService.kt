@@ -5,6 +5,7 @@ import dev.toke.kpopapi.models.Address
 import dev.toke.kpopapi.repositories.AddressRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class AddressService(val addressRepository: AddressRepository) {
@@ -21,6 +22,12 @@ class AddressService(val addressRepository: AddressRepository) {
         return addressRepository.findAddressesByQueries(searchTerm)
             .map { a -> AddressDTO(id = a.id, streetAddress = a.streetAddress, suburb = a.suburb, postCode = a.postCode) }
     }
+
+    fun getAddressById(id: UUID) : Optional<Address> {
+        logger.info("Retrieving an address by its id")
+        return addressRepository.findById(id)
+    }
+
 
     fun addAddress(address: AddressDTO): AddressDTO {
         val addressEntity = address.let {

@@ -11,10 +11,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
 import util.addressDTO
 import java.util.UUID
 
@@ -34,7 +32,7 @@ class AddressControllerUnitTest {
 
         every { addressServiceMock.addAddress(any()) } returns newAddress
 
-        var result = webTestClient.post()
+        val result = webTestClient.post()
             .uri("/api/v1/addresses")
             .bodyValue(addressDTO())
             .exchange()

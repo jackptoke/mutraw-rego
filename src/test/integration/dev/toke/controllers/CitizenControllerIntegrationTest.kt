@@ -1,9 +1,13 @@
 package dev.toke.controllers
 
 import dev.toke.kpopapi.KpopApiApplication
+import dev.toke.kpopapi.dtos.AddressDTO
 import dev.toke.kpopapi.dtos.CitizenDTO
+import dev.toke.kpopapi.models.Address
 import dev.toke.kpopapi.models.Citizen
+import dev.toke.kpopapi.repositories.AddressRepository
 import dev.toke.kpopapi.repositories.CitizenRepository
+import dev.toke.kpopapi.services.AddressService
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -16,6 +20,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.util.UriComponentsBuilder
+import util.addressDTO
 import util.citizenEntityList
 
 @SpringBootTest(classes = [KpopApiApplication::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -28,26 +33,42 @@ class CitizenControllerIntegrationTest {
     @Autowired
     lateinit var citizenRepository: CitizenRepository
 
+    @Autowired
+    lateinit var addressRepository: AddressRepository
+
     @BeforeEach
     fun setUp() {
         citizenRepository.deleteAll()
-        val citizens = citizenEntityList()
+        addressRepository.deleteAll()
+        val address = Address(null, "63 Tobin Street", "Ararat", "3377")
+        addressRepository.save(address)
+        val citizens = citizenEntityList(address)
         citizenRepository.saveAll(citizens)
     }
 
     @Test
-    fun addCourseTest() {
-        val newCitizen = CitizenDTO(null, "Amy", "Toke", "23/01/1988")
+    fun addCitizenTest() {
+        val addresses = webTestClient.get()
+            .uri("/api/v1/addresses")
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(AddressDTO::class.java)
+            .returnResult().responseBody
+
+        val address = addresses?.get(0)
+
+        val newCitizen = CitizenDTO(null, "Amy", "Toke", "23/01/1988", addressId = address?.id)
         val result = webTestClient.post().uri("/api/v1/citizens")
             .bodyValue(newCitizen)
             .exchange()
             .expectStatus().isCreated
-            .expectBody(CitizenDTO::class.java).returnResult()
+            .expectBody(CitizenDTO::class.java).returnResult().responseBody
+        Assertions.assertNotNull(result?.id)
+        Assertions.assertEquals(address?.id, result?.addressId)
+        Assertions.assertEquals("Amy", result?.firstName)
+        Assertions.assertEquals("Toke", result?.lastName)
+        Assertions.assertEquals("23/01/1988", result?.dob)
 
-        Assertions.assertEquals("Amy", result.responseBody?.firstName)
-        Assertions.assertEquals("Toke", result.responseBody?.lastName)
-        Assertions.assertEquals("23/01/1988", result.responseBody?.dob)
-        Assertions.assertNotNull(result.responseBody?.id)
     }
 
     @Test

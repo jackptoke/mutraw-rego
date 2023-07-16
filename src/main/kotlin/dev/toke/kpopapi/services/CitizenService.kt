@@ -1,6 +1,7 @@
 package dev.toke.kpopapi.services
 
 import dev.toke.kpopapi.dtos.CitizenDTO
+import dev.toke.kpopapi.exceptions.AddressNotFoundException
 import dev.toke.kpopapi.exceptions.CitizenNotFoundException
 import dev.toke.kpopapi.models.Citizen
 import dev.toke.kpopapi.repositories.CitizenRepository
@@ -9,7 +10,10 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
-class CitizenService(val citizenRepository: CitizenRepository) {
+class CitizenService(
+    val citizenRepository: CitizenRepository,
+    val addressService: AddressService,
+) {
 
     companion object : KLogging()
 
@@ -20,26 +24,37 @@ class CitizenService(val citizenRepository: CitizenRepository) {
 
     fun getCitizenById(id: UUID): CitizenDTO? {
         val result = citizenRepository.findById(id).get()
-        return CitizenDTO(
+        return result.address?.id?.let {
+            CitizenDTO(
                 id = result.id,
                 firstName = result.firstName,
                 lastName = result.lastName,
-                dob = result.dob
+                dob = result.dob,
+                addressId = it
             )
-
+        }
     }
 
-    fun addCitizen(citizen: CitizenDTO): CitizenDTO {
-        val citizenEntity = citizen.let {
-            Citizen(id = null, it.firstName, it.lastName, it.dob)
-        }
-        citizenRepository.save(citizenEntity)
+    fun addCitizen(citizen: CitizenDTO): CitizenDTO? {
+        val addressOptional = addressService.getAddressById(citizen.addressId!!)
 
-        logger.info("Saved citizen is: $citizenEntity")
+        if(!addressOptional.isPresent) throw AddressNotFoundException("Address with id ${citizen.addressId} is not found")
 
-        return citizenEntity.let {
-            CitizenDTO(it.id, it.firstName, it.lastName, it.dob)
+        return addressOptional.let { address ->
+            val citizenEntity = citizen.let {
+                Citizen(id = null, it.firstName, it.lastName, it.dob, address.get())
+            }
+
+            logger.info("Saving citizen in progress ...")
+            citizenRepository.save(citizenEntity)
+
+            logger.info("Saved citizen is: $citizenEntity")
+
+            return citizenEntity.let {
+                it.address?.id?.let { it1 -> CitizenDTO(it.id, it.firstName, it.lastName, it.dob, addressId = it1) }
+            }
         }
+
     }
 
     fun updateCitizen(citizenId: UUID, citizen: CitizenDTO): CitizenDTO? {
@@ -51,7 +66,7 @@ class CitizenService(val citizenRepository: CitizenRepository) {
                 it.dob = citizen.dob
                 citizenRepository.save(it)
                 logger.info("Successfully updated citizen with id $citizenId")
-                CitizenDTO(it.id, it.firstName, it.lastName, it.dob)
+                it.address?.id?.let { it1 -> CitizenDTO(it.id, it.firstName, it.lastName, it.dob, addressId = it1) }
             }
         } else {
             logger.info("Cannot find citizen with id $citizenId")
@@ -72,8 +87,12 @@ class CitizenService(val citizenRepository: CitizenRepository) {
     }
 
     fun findCitizensByYearOfBirth(year: String): List<CitizenDTO> {
-        return citizenRepository.findCitizensByYearOfBirth(year).map { c -> CitizenDTO(c.id, c.firstName, c.lastName, c.dob) }
-
+        val result = citizenRepository.findCitizensByYearOfBirth(year)
+        return result.let {
+            it.map { c ->
+                CitizenDTO(c.id, c.firstName, c.lastName, c.dob, c.address?.id)
+            }
+        }
     }
 
 }
